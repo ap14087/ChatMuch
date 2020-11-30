@@ -18,4 +18,5 @@ public class NodeNames {
     public static final String MESSAGE_TIME = "messageTime" ;
     public static final String MESSAGE_FROM = "messageFrom" ;
     public static final String MESSAGES = "Messages" ;
+    public static final String UNREAD_COUNT = "unread_count";
 }

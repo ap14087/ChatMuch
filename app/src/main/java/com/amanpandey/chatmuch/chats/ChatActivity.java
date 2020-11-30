@@ -61,6 +61,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import selectfriend.SelectFriendActivity;
+
 import static android.provider.MediaStore.ACTION_IMAGE_CAPTURE;
 
 
@@ -678,5 +680,20 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
             }
 
         }
+    }
+
+    public void forwardMessage(String selectedMessageId, String selectedMessage, String selectedMessageType) {
+        Intent intent = new Intent(this, SelectFriendActivity.class);
+        intent.putExtra(Extras.MESSAGE, selectedMessage);
+        intent.putExtra(Extras.MESSAGE_ID, selectedMessageId);
+        intent.putExtra(Extras.MESSAGE_TYPE, selectedMessageType);
+        startActivityForResult(intent , REQUEST_CODE_FORWARD_MESSAGE);
+    }
+
+    @Override
+    public void onBackPressed() {
+        mRootRef.child(NodeNames.CHATS).child(currentUserId).child(chatUserId).child(NodeNames.UNREAD_COUNT).setValue(0);
+        super.onBackPressed();
+
     }
 }
