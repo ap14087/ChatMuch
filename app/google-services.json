@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "425161551333",
+    "firebase_url": "https://chatmuch-7bff7.firebaseio.com",
+    "project_id": "chatmuch-7bff7",
+    "storage_bucket": "chatmuch-7bff7.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:425161551333:android:bd1fddacff326b8969530c",
+        "android_client_info": {
+          "package_name": "com.amanpandey.chatmuch"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "425161551333-555i78mbqaqiei62m4e9er0k09e39vpa.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAsDAATVO6rMPiwgDEAoogQ4Tr4JQaISBY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "425161551333-555i78mbqaqiei62m4e9er0k09e39vpa.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
