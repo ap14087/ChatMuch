@@ -14,11 +14,14 @@ import com.amanpandey.chatmuch.common.Util;
 import com.amanpandey.chatmuch.password.ResetPassword;
 import com.amanpandey.chatmuch.signUp.SignUp;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.firebase.iid.InstanceIdResult;
 
 public class Login extends AppCompatActivity {
 
@@ -90,6 +93,15 @@ public class Login extends AppCompatActivity {
         FirebaseUser firebaseUser = firebaseAuth.getCurrentUser();
 
         if(firebaseUser != null){
+
+            FirebaseInstanceId.getInstance().getInstanceId().addOnSuccessListener(new OnSuccessListener<InstanceIdResult>() {
+                @Override
+                public void onSuccess(InstanceIdResult instanceIdResult) {
+                    Util.updateDeviceToken(Login.this, instanceIdResult.getToken() );
+                }
+            });
+
+
             startActivity(new Intent(Login.this,MainActivity.class));
             finish();
         }

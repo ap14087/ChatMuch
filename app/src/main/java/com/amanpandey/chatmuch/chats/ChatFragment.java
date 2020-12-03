@@ -44,6 +44,7 @@ public class ChatFragment extends Fragment {
 
     private ChildEventListener childEventListener;
     private Query query;
+    private   List<String> userIds = new ArrayList<>();
 
     public ChatFragment() {
         // Required empty public constructor
@@ -90,7 +91,7 @@ public class ChatFragment extends Fragment {
 
            @Override
            public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-
+               updateList(snapshot, false, snapshot.getKey());
            }
 
            @Override
@@ -122,28 +123,44 @@ public class ChatFragment extends Fragment {
 
         String lastMessage,lastMessageTime,unreadCount;
 
-        lastMessage = "";
-        lastMessageTime = "";
-        unreadCount ="";
+        if(snapshot.child(NodeNames.LAST_MESSAGE).getValue()!=null)
+            lastMessage = snapshot.child(NodeNames.LAST_MESSAGE).getValue().toString();
+        else
+            lastMessage = "";
+
+        if(snapshot.child(NodeNames.LAST_MESSAGE_TIME).getValue()!=null)
+            lastMessageTime = snapshot.child(NodeNames.LAST_MESSAGE_TIME).getValue().toString();
+        else
+            lastMessageTime="";
+
+        unreadCount=snapshot.child(NodeNames.UNREAD_COUNT).getValue()==null?
+                "0":snapshot.child(NodeNames.UNREAD_COUNT).getValue().toString();
+
 
         databaseReferenceUsers.child(userId).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
 
-                if(userId.equals(currentUser.getUid()))
-                    return;
-
-
                 String fullName = snapshot.child(NodeNames.NAME).getValue()!=null?
                         snapshot.child(NodeNames.NAME).getValue().toString():"";
 
-                String photoName = snapshot.child(NodeNames.PHOTO).getValue()!=null?
-                        snapshot.child(NodeNames.PHOTO).getValue().toString():"";
+                /*String photoName = dataSnapshot.child(NodeNames.PHOTO).getValue()!=null?
+                        dataSnapshot.child(NodeNames.PHOTO).getValue().toString():"";*/
+                String photoName  = userId +".jpg";
 
-                ChatListModel chatListModel = new ChatListModel(userId,fullName,photoName,unreadCount,lastMessage,lastMessageTime);
+                ChatListModel chatListModel = new ChatListModel(userId, fullName, photoName,unreadCount,lastMessage,lastMessageTime);
 
-                chatListModelList.add(chatListModel);
+                if(isNew) {
+                    chatListModelList.add(chatListModel);
+                    userIds.add(userId);
+                }
+                else {
+                    int indexOfClickedUser = userIds.indexOf(userId) ;
+                    chatListModelList.set(indexOfClickedUser, chatListModel);
+                }
+
                 chatListAdapter.notifyDataSetChanged();
+
             }
 
             @Override

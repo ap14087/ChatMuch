@@ -23,4 +23,6 @@
     <string name="failed_to_store_file">Failed to store file</string>
     <string name="share_with">Share with</string>
     <string name="failed_to_fetch_friend_list">Failed to fetch friend list</string>
+    <string name="failed_to_save_device_token">Failed to save device token</string>
+    <string name="failed_to_send_notification">Failed to send notification</string>
 </resources>

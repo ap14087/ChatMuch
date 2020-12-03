@@ -17,7 +17,9 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.text.Editable;
 import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.view.MenuItem;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
@@ -49,6 +51,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ServerValue;
+import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FileDownloadTask;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.OnProgressListener;
@@ -69,7 +72,7 @@ import static android.provider.MediaStore.ACTION_IMAGE_CAPTURE;
 public class ChatActivity extends AppCompatActivity implements View.OnClickListener {
 
     private ImageView ivSend, ivAttachment, ivProfile;
-    private TextView tvUserName;
+    private TextView tvUserName,tvUserStatus;
     private EditText etMessage;
     private DatabaseReference mRootRef;
     private FirebaseAuth firebaseAuth;
@@ -118,6 +121,7 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
 
         ivProfile = findViewById(R.id.ivProfile);
         tvUserName = findViewById(R.id.tvUserName);
+        tvUserStatus = findViewById(R.id.tvUserStatus);
 
         ivSend = findViewById(R.id.ivSend);
         ivAttachment = findViewById(R.id.ivAttachment);
@@ -167,6 +171,9 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
         rvMessages.setAdapter(messagesAdapter);
 
         loadMessages();
+
+        mRootRef.child(NodeNames.CHATS).child(currentUserId).child(chatUserId).child(NodeNames.UNREAD_COUNT).setValue(0);
+
         rvMessages.scrollToPosition(messagesList.size() - 1);
 
         srlMessages.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
@@ -184,7 +191,116 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
         view.findViewById(R.id.llVideo).setOnClickListener(this);
         view.findViewById(R.id.ivClose).setOnClickListener(this);
         bottomSheetDialog.setContentView(view);
+
+
+        if(getIntent().hasExtra(Extras.MESSAGE) && getIntent().hasExtra(Extras.MESSAGE_ID) && getIntent().hasExtra(Extras.MESSAGE_TYPE) ) {
+            String message = getIntent().getStringExtra(Extras.MESSAGE);
+            String messageId = getIntent().getStringExtra(Extras.MESSAGE_ID);
+            final String messageType = getIntent().getStringExtra(Extras.MESSAGE_TYPE);
+
+            DatabaseReference messageRef = mRootRef.child(NodeNames.MESSAGES).child(currentUserId).child(chatUserId).push();
+            final String newMessageId = messageRef.getKey();
+
+            if(messageType.equals(Constants.MESSAGE_TYPE_TEXT)) {
+                sendMessage(message, messageType, newMessageId);
+            }
+            else
+            {
+                StorageReference rootRef = FirebaseStorage.getInstance().getReference();
+                String folder = messageType.equals( Constants.MESSAGE_TYPE_VIDEO)? Constants.MESSAGE_VIDEOS:Constants.MESSAGE_IMAGES;
+                String oldFileName = messageType.equals( Constants.MESSAGE_TYPE_VIDEO)?messageId + ".mp4": messageId+".jpg";
+                String newFileName = messageType.equals( Constants.MESSAGE_TYPE_VIDEO)?newMessageId + ".mp4": newMessageId+".jpg";
+
+                final String localFilePath = getExternalFilesDir(null).getAbsolutePath() + "/" + oldFileName;
+                final File localFile = new File(localFilePath);
+
+                final StorageReference newFileRef = rootRef.child(folder).child(newFileName);
+                rootRef.child(folder).child(oldFileName).getFile(localFile)
+                        .addOnSuccessListener(new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
+                            @Override
+                            public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
+                                UploadTask uploadTask = newFileRef.putFile(Uri.fromFile(localFile));
+                                uploadProgress(uploadTask, newFileRef, newMessageId, messageType);
+                            }
+                        });
+
+            }
+
+        }
+
+        DatabaseReference databaseReferenceUsers = mRootRef.child(NodeNames.USERS).child(chatUserId);
+        databaseReferenceUsers.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+
+                String status="";
+                if(dataSnapshot.child(NodeNames.ONLINE).getValue()!=null)
+                    status = dataSnapshot.child(NodeNames.ONLINE).getValue().toString();
+
+                if(status.equals("true"))
+                    tvUserStatus.setText(Constants.STATUS_ONLINE);
+                else
+                    tvUserStatus.setText(Constants.STATUS_OFFLINE);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+
+        etMessage.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+
+                DatabaseReference currentUserRef = mRootRef.child(NodeNames.CHATS).child(currentUserId).child(chatUserId);
+                if(editable.toString().matches(""))
+                {
+                    currentUserRef.child(NodeNames.TYPING).setValue(Constants.TYPING_STOPPED);
+                }
+                else
+                {
+                    currentUserRef.child(NodeNames.TYPING).setValue(Constants.TYPING_STARTED);
+                }
+
+            }
+        });
+
+
+        DatabaseReference chatUserRef = mRootRef.child(NodeNames.CHATS).child(chatUserId).child(currentUserId);
+        chatUserRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if(dataSnapshot.child(NodeNames.TYPING).getValue()!=null)
+                {
+                    String typingStatus = dataSnapshot.child(NodeNames.TYPING).getValue().toString();
+
+                    if(typingStatus.equals(Constants.TYPING_STARTED))
+                        tvUserStatus.setText(Constants.STATUS_TYPING);
+                    else
+                        tvUserStatus.setText(Constants.STATUS_ONLINE);
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+
+
     }
+
 
     private void sendMessage(String msg, String msgType, String pushId) {
 
@@ -213,8 +329,24 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
                             Toast.makeText(ChatActivity.this, "Failed to send message : " + error.getMessage(), Toast.LENGTH_SHORT).show();
 
 
-                        } else {
+                        }  {
                             Toast.makeText(ChatActivity.this, "Message sent successfully", Toast.LENGTH_SHORT).show();
+                            String title="";
+
+                            if(msgType.equals(Constants.MESSAGE_TYPE_TEXT))
+                                title = "New Message";
+                            else if(msgType.equals(Constants.MESSAGE_TYPE_IMAGE))
+                                title = "New Image";
+                            else if(msgType.equals(Constants.MESSAGE_TYPE_VIDEO))
+                                title = "New Video";
+
+                            Util.sendNotification(ChatActivity.this, title, msg, chatUserId);
+
+                            String lastMessage= !title.equals("New Message")?title:msg;
+
+                            Util.updateChatDetails(ChatActivity.this, currentUserId, chatUserId, lastMessage);
+
+
                         }
                     }
                 });

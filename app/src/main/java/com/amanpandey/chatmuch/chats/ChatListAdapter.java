@@ -3,6 +3,7 @@ package com.amanpandey.chatmuch.chats;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,6 +17,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.amanpandey.chatmuch.R;
 import com.amanpandey.chatmuch.common.Constants;
 import com.amanpandey.chatmuch.common.Extras;
+import com.amanpandey.chatmuch.common.Util;
 import com.bumptech.glide.Glide;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.storage.FirebaseStorage;
@@ -58,6 +60,26 @@ public class ChatListAdapter extends RecyclerView.Adapter<ChatListAdapter.ChatLi
                         .into(holder.ivProfile);
             }
         });
+
+        String lastMessage  = chatListModel.getLastMessage();
+        lastMessage = lastMessage.length()>30?lastMessage.substring(0,30):lastMessage;
+        holder.tvLastMessage.setText(lastMessage);
+
+        String lastMessageTime = chatListModel.getLastMessageTime();
+        if(lastMessageTime==null) lastMessageTime="";
+        if(!TextUtils.isEmpty(lastMessageTime))
+            holder.tvLastMessageTime.setText(Util.getTimeAgo(Long.parseLong(lastMessageTime)));
+
+
+
+        if(!chatListModel.getUnreadCount().equals("0"))
+        {
+            holder.tvUnreadCount.setVisibility(View.VISIBLE);
+            holder.tvUnreadCount.setText(chatListModel.getUnreadCount());
+        }
+        else
+            holder.tvUnreadCount.setVisibility(View.GONE);
+
 
         holder.llChatList.setOnClickListener(new View.OnClickListener() {
             @Override

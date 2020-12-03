@@ -17,6 +17,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.amanpandey.chatmuch.R;
 import com.amanpandey.chatmuch.common.Constants;
 import com.amanpandey.chatmuch.common.NodeNames;
+import com.amanpandey.chatmuch.common.Util;
 import com.bumptech.glide.Glide;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -146,6 +147,11 @@ public class FindFriendAdapter extends RecyclerView.Adapter<FindFriendAdapter.Fi
                                 @Override
                                 public void onComplete(@NonNull Task<Void> task) {
                                     if(task.isSuccessful()){
+
+                                        String title = "New Friend Request";
+                                        String message= "Friend request from " + currentUser.getDisplayName();
+                                        Util.sendNotification(context, title, message, userId);
+
                                         Toast.makeText(context, "Request sent successfully", Toast.LENGTH_SHORT).show();
                                         holder.btnSendRequest.setVisibility(View.GONE);
                                         holder.pbRequest.setVisibility(View.GONE);

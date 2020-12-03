@@ -17,6 +17,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.amanpandey.chatmuch.R;
 import com.amanpandey.chatmuch.common.Constants;
 import com.amanpandey.chatmuch.common.NodeNames;
+import com.amanpandey.chatmuch.common.Util;
 import com.bumptech.glide.Glide;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -105,7 +106,11 @@ public class RequestAdapter extends RecyclerView.Adapter<RequestAdapter.RequestV
                                                         @Override
                                                         public void onComplete(@NonNull Task<Void> task) {
                                                             if(task.isSuccessful())
-                                                            {
+
+                                                            {   String title = "Friend Request Accepted";
+                                                                String message= "Friend request accepted by " + currentUser.getDisplayName();
+                                                                Util.sendNotification(context, title, message, userId);
+
                                                                 holder.pbDecision.setVisibility(View.GONE);
                                                                 holder.btnDenyRequest.setVisibility(View.VISIBLE);
                                                                 holder.btnAcceptRequest.setVisibility(View.VISIBLE);
@@ -178,6 +183,10 @@ public class RequestAdapter extends RecyclerView.Adapter<RequestAdapter.RequestV
                                 public void onComplete(@NonNull Task<Void> task) {
                                     if(task.isSuccessful())
                                     {
+                                        String title = "Friend Request Denied";
+                                        String message= "Friend request denied by " + currentUser.getDisplayName();
+                                        Util.sendNotification(context, title, message, userId);
+
                                         holder.pbDecision.setVisibility(View.GONE);
                                         holder.btnDenyRequest.setVisibility(View.VISIBLE);
                                         holder.btnAcceptRequest.setVisibility(View.VISIBLE);
